@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import argparse
+import datetime
 import http.client
 import httplib2
 import os
@@ -157,7 +159,10 @@ def resumable_upload(insert_request):
       time.sleep(sleep_seconds)
 
 if __name__ == '__main__':
-  argparser.add_argument("--file", required=True, help="Video file to upload")
+  argparser.add_argument('--stationdir', dest='stationdir')
+  argparser.add_argument('--stationname', dest='stationname')
+  argparser.add_argument('--fileext', dest='fileext')
+  argparser.add_argument("--file", help="Video file to upload")
   argparser.add_argument("--title", help="Video title", default="Test Title")
   argparser.add_argument("--description", help="Video description",
     default="Test Description")
@@ -168,8 +173,18 @@ if __name__ == '__main__':
     default="")
   argparser.add_argument("--privacyStatus", choices=VALID_PRIVACY_STATUSES,
     default=VALID_PRIVACY_STATUSES[0], help="Video privacy status.")
+  dt_yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
+  dirname_yesterday = dt_yesterday.strftime("%Y-%m-%d")
   args = argparser.parse_args()
-
+  videos_dirname = os.path.join(args.stationdir, dirname_yesterday, 'videos')
+  station_name = args.stationname
+  video_title = "{station_name} {date_yesterday}".format(station_name=station_name, date_yesterday=dirname_yesterday)
+  video_file_name = "{station_name} {date_yesterday}{fileext}".format(station_name=station_name, date_yesterday=dirname_yesterday, fileext=args.fileext)
+  video_file_path = os.path.join(videos_dirname, video_file_name)
+  args_dict = vars(args)
+  args_dict['file'] = video_file_path
+  args_dict['title'] = video_title
+  
   if not os.path.exists(args.file):
     exit("Please specify a valid file using the --file= parameter.")
 
